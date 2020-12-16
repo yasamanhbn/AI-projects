@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 
@@ -98,9 +99,12 @@ class State{
     public void showState(){
         System.out.println("new State");
         for(Section section : sections){
-            if(section!=null) {
+            if(section.getCards().size()!=0) {
                 section.showSection();
                 System.out.println();
+            }
+            else {
+                System.out.println("#");
             }
         }
     }
@@ -119,12 +123,11 @@ class Node{
     private final int n;
     private int nodesExpanded =0 ;
     private int nodesCreated = 1;
-    private boolean findDuplicate;
-    ArrayList<State> frontier;
+    LinkedList<State> frontier;
     public Node(State state,int k,int n){
         this.k = k;
         this.n = n;
-        frontier = new ArrayList<>();
+        frontier = new LinkedList<>();
         frontier.add(state);
     }
 //this method create a new child from his parent
@@ -151,18 +154,16 @@ class Node{
         Card selectCard;
         Card currentCard;
         while (this.frontier.size()>0) {
-            int lastItem = this.frontier.size() -1;
-            State currentState = this.frontier.get(lastItem);
-            currentState.showState();
-            this.frontier.remove(lastItem);
-            nodesExpanded++;
+            State currentState = this.frontier.pop();
             if(checkGoal(currentState)){
+                nodesExpanded++;
                 showResult(currentState);
                 return true;
             }
 //            this loop check all possible moves for creating new node
             if(currentState.getHeight()>=height)
                 continue;
+            nodesExpanded++;
             for (int i = 0; i < k; i++) {
                 if (currentState.getSections().get(i).getCards().size() == 0)
                     continue;
@@ -172,7 +173,6 @@ class Node{
                     if (i == j)
                         continue;
                     Section section = currentState.getSections().get(j);
-//*****************************************************
                     if (section.getCards().size() == 0) {
                         checkAndAdd(currentState,i,j);
                     } else {
@@ -188,7 +188,7 @@ class Node{
     }
     //check frontier and create a new node
     private void checkAndAdd(State currentState,int i,int j){
-        findDuplicate = false;
+        boolean findDuplicate = false;
         State newSate;
         newSate = this.makeNewSate(currentState, i, j);
         for (State s : frontier) {
@@ -198,7 +198,7 @@ class Node{
             }
         }
         if(!findDuplicate){
-            frontier.add(frontier.size(),newSate);
+            frontier.push(newSate);
 //                    System.out.println("height" + newSate.getHeight());
 //                    newSate.showState();
             nodesCreated++;
@@ -209,7 +209,7 @@ class Node{
         State tmp = currentState;
         System.out.println("find");
         currentState.showState();
-        System.out.println("height: "+ currentState.getHeight());
+        System.out.println("depth: "+ currentState.getHeight());
         System.out.println("node created: "+this.nodesCreated);
         System.out.println("node expanded: "+this.nodesExpanded);
         System.out.println("steps");

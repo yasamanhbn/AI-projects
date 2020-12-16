@@ -100,9 +100,12 @@ class State{
     public void showState(){
         System.out.println("new State");
         for(Section section : sections){
-            if(section!=null) {
+            if(section.getCards().size()!=0) {
                 section.showSection();
                 System.out.println();
+            }
+            else {
+                System.out.println("#");
             }
         }
     }
@@ -212,7 +215,7 @@ class Node{
         State tmp = currentState;
         System.out.println("find");
         currentState.showState();
-        System.out.println("height: "+ currentState.getHeight());
+        System.out.println("depth: "+ currentState.getHeight());
         System.out.println("node created: "+this.nodesCreated);
         System.out.println("node expanded: "+this.nodesExpanded);
         System.out.println("steps");
