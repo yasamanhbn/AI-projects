@@ -121,20 +121,14 @@ class State{
 
 class Node{
     private final int k;
-    private final int n;
     private int nodesExpanded =0 ;
     private int nodesCreated = 1;
-    private boolean findDuplicate;
-
-    ArrayList<State> states;
     ArrayList<State> frontier;
     ArrayList<State> explored;
-    public Node(State state,int k,int n){
+    public Node(State state,int k){
         this.k = k;
-        this.n = n;
         frontier = new ArrayList<>();
         explored = new ArrayList<>();
-        states = new ArrayList<>();
         frontier.add(state);
     }
     //this method create a new child from his parent
@@ -173,7 +167,6 @@ class Node{
                     if (i == j)
                         continue;
                     Section section = currentState.getSections().get(j);
-                    findDuplicate = false;
                     if (section.getCards().size() == 0) {
                         if(checkAndAdd(currentState,i,j))
                             return;
@@ -192,23 +185,25 @@ class Node{
         private boolean checkAndAdd(State currentState,int i,int j){
             State newSate;
             newSate = this.makeNewSate(currentState, i, j);
-            for (State s : states) {
+            for (State s : explored) {
                 if (s.equals(newSate)) {
-                    findDuplicate = true;
-                    break;
+                    return false;
                 }
             }
-            if(!findDuplicate){
+                for(State s: frontier){
+                    if (s.equals(newSate)) {
+                        return false;
+                    }
+                }
                 if(this.checkGoal(newSate)) {
+                    nodesCreated++;
                     showResult(newSate);
                     return true;
                 }
                 frontier.add(frontier.size(),newSate);
-                states.add(newSate);
 //                    System.out.println("height" + newSate.getHeight());
 //                    newSate.showState();
                 nodesCreated++;
-            }
             return false;
         }
     private void showResult(State currentState){
@@ -285,7 +280,7 @@ public class Main {
             }
             state.addSection(section[i]);
         }
-        Node node = new Node(state,k,n);
+        Node node = new Node(state,k);
         node.action();
     }
 }

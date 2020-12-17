@@ -1,11 +1,10 @@
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 
-
 class Card{
-    private int number;
-    private String color;
+    private final int number;
+    private final String color;
     public Card(int number,String color){
         this.color = color;
         this.number = number;
@@ -26,9 +25,8 @@ class Card{
     }
 }
 
-
 class Section{
-    private ArrayList<Card> cards;
+    private final ArrayList<Card> cards;
     public Section(){
         cards = new ArrayList<>();
     }
@@ -46,6 +44,10 @@ class Section{
     }
 
     public void showSection(){
+        if(cards.size()==0) {
+            System.out.println("#");
+            return;
+        }
         for(Card card : cards){
             System.out.print(card.getNumber()+card.getColor()+"\t");
         }
@@ -61,15 +63,25 @@ class Section{
 }
 
 
-class State{
-    private ArrayList<Section> sections;
+class State implements Comparable<State>{
+    private final ArrayList<Section> sections;
     private final int height;
-    private State parent;
+    private final int cost;
+    private int heuristic;
+    private final int sum;
+    private final State parent;
+
     private String changedState;
-    public State(int height,State parent){
+    public State(int height,State parent,int sum,int cost){
         sections = new ArrayList<>();
         this.height = height;
         this.parent = parent;
+        this.sum = sum;
+        this.cost = cost;
+    }
+
+    public void setHeuristic(int heuristic) {
+        this.heuristic = heuristic;
     }
 
     public void setChangedState(String changedState) {
@@ -92,6 +104,10 @@ class State{
         sections.add(section);
     }
 
+    public int getSum() {
+        return sum;
+    }
+
     public ArrayList<Section> getSections() {
         return sections;
     }
@@ -108,6 +124,40 @@ class State{
             }
         }
     }
+
+    public int getHeuristic() {
+        return heuristic;
+    }
+
+    public int heuristic(){
+        ArrayList<Card> cards;
+        int counter =0;
+        String color;
+        int number;
+        for(Section section:this.getSections()){
+            cards = section.getCards();
+            if(cards.size()==0)
+                continue;
+            color = cards.get(0).getColor();
+            number = cards.get(0).getNumber();
+            for(Card card:cards){
+                if(card.getColor().equals(color) && number>=card.getNumber()){
+                    counter++;
+                    number = card.getNumber();
+                }
+                else {
+                    break;
+                }
+            }
+        }
+
+        return this.sum - counter;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this==o){
@@ -116,23 +166,29 @@ class State{
         State section = (State) o;
         return section.getSections().equals(this.sections);
     }
+
+    @Override
+    public int compareTo(State o) {
+        return  (this.getHeuristic()+this.cost) - (o.getHeuristic()+o.cost);
+    }
+
 }
-//=================================================================================
 class Node{
     private final int k;
-    private final int n;
-    public static int nodesExpanded=0;
-    public static int nodesCreated=0;
-    LinkedList<State> frontier;
-    public Node(State state,int k,int n){
+    private int nodesExpanded =0 ;
+    private int nodesCreated = 1;
+    PriorityQueue<State> frontier;
+    ArrayList<State> explored;
+    public Node(State state,int k){
         this.k = k;
-        this.n = n;
-        frontier = new LinkedList<>();
+        frontier = new PriorityQueue<>();
+        explored = new ArrayList<>();
         frontier.add(state);
     }
-//this method create a new child from his parent
+
+    //this method create a new child from his parent
     private State makeNewSate(State state,int i,int j){
-        State copyState = new State(state.getHeight()+1,state);
+        State copyState = new State(state.getHeight()+1,state,state.getSum(),state.getCost()+1);
         ArrayList<Section> sections = (state.getSections());
         for(Section section:sections){
             Section newSection = new Section();
@@ -147,23 +203,23 @@ class Node{
         copyState.getSections().get(j).addCard(temp.get(temp.size()-1));
         copyState.getSections().get(i).deleteCard();
         copyState.setChangedState("move "+temp.get(temp.size()-1).getNumber()+temp.get(temp.size()-1).getColor()+" from column "+ (i+1) + " to column "+ (j+1));
+        copyState.setHeuristic(copyState.heuristic());
         return copyState;
     }
 
-    public boolean action(int height){
+    public void action(){
         Card selectCard;
         Card currentCard;
         while (this.frontier.size()>0) {
-            State currentState = this.frontier.pop();
-            if(checkGoal(currentState)){
-                nodesExpanded++;
-                showResult(currentState);
-                return true;
-            }
-//            this loop check all possible moves for creating new node
-            if(currentState.getHeight()>=height)
-                continue;
+            State currentState = this.frontier.poll();
+//            currentState.showState();
             nodesExpanded++;
+            if(currentState.getHeuristic()==0){
+                showResult(currentState);
+                return;
+            }
+
+            explored.add(currentState);
             for (int i = 0; i < k; i++) {
                 if (currentState.getSections().get(i).getCards().size() == 0)
                     continue;
@@ -184,23 +240,40 @@ class Node{
                 }
             }
         }
-        return false;
     }
-    //check frontier and create a new node
+
+    //check explored and create a new node
     private void checkAndAdd(State currentState,int i,int j){
         State newSate;
+        State flag = null;
         newSate = this.makeNewSate(currentState, i, j);
-            frontier.push(newSate);
-            nodesCreated++;
+        for (State s : explored) {
+            if (s.equals(newSate)) {
+                return;
+            }
+        }
+        for(State s: frontier){
+            if (s.equals(newSate)) {
+                if(s.getHeuristic()<=newSate.getHeuristic()) {
+                    return;
+                }
+                else
+                    flag = s;
+            }
+        }
+        if(flag!=null){
+            frontier.remove(flag);
+        }
+        frontier.offer(newSate);
+        nodesCreated++;
     }
-//this method show final state,steps and other staffs
     private void showResult(State currentState){
         State tmp = currentState;
         System.out.println("find");
         currentState.showState();
         System.out.println("depth: "+ currentState.getHeight());
-        System.out.println("node created: "+nodesCreated);
-        System.out.println("node expanded: "+nodesExpanded);
+        System.out.println("node created: "+this.nodesCreated);
+        System.out.println("node expanded: "+this.nodesExpanded);
         System.out.println("steps");
         ArrayList<String> steps = new ArrayList<>();
         while(tmp.getParent()!=null){
@@ -212,48 +285,21 @@ class Node{
         }
     }
 
-    public boolean checkGoal(State state){
-        String color;
-        ArrayList<Section> sections = state.getSections();
-        for(Section section:sections) {
-            ArrayList<Card> cards = section.getCards();
-            if (cards.size() > 0) {
-                color = cards.get(0).getColor();
-                for (Card card : cards) {
-                    if (!color.equals(card.getColor())) {
-                        return false;
-                    }
-                }
-                int number = cards.get(0).getNumber();
-                for (Card card : cards) {
-                    if (card.getNumber() > number) {
-                        return false;
-                    }
-                    number = card.getNumber();
-                }
-            }
-        }
-        return true;
-    }
 }
 
-
-
-//======================================================================================
 public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         String cardLine;
         String[] cards;
-        int firstHeight = 0;
         int k = sc.nextInt();
 //        color count
-        int m = sc.nextInt();
+        int  m = sc.nextInt();
 //        number count
         int n = sc.nextInt();
         sc.nextLine();
         Section[] section = new Section[k];
-        State state = new State(0,null);
+        State state = new State(0,null,n*m,1);
         state.setChangedState("first state");
         for(int i=0; i<k; i++){
             section[i] = new Section();
@@ -272,13 +318,8 @@ public class Main {
             }
             state.addSection(section[i]);
         }
-        while (true) {
-            Node node = new Node(state, k, n);
-            Node.nodesCreated++;
-            if(node.action(firstHeight))
-                break;
-            else
-                firstHeight++;
-        }
+            state.setHeuristic(state.heuristic());
+            Node node = new Node(state, k);
+            node.action();
     }
 }
