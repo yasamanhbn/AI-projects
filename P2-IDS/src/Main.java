@@ -199,8 +199,6 @@ class Node{
         System.out.println("find");
         currentState.showState();
         System.out.println("depth: "+ currentState.getHeight());
-        System.out.println("node created: "+nodesCreated);
-        System.out.println("node expanded: "+nodesExpanded);
         System.out.println("steps");
         ArrayList<String> steps = new ArrayList<>();
         while(tmp.getParent()!=null){
@@ -210,6 +208,8 @@ class Node{
         for(int j = steps.size()-1;j>=0;j--){
             System.out.println(steps.get(j));
         }
+        System.out.println("node created: "+nodesCreated);
+        System.out.println("node expanded: "+nodesExpanded);
     }
 
     public boolean checkGoal(State state){
