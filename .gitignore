@@ -1,10 +1,16 @@
 AI-doc.pdf
 AIP1_9731017.zip
 csp/out
+csp/.idea
+csp/out
 P1-BFS/out
 P2-IDS/out
 P3-AStar/out
 P1-BFS/BFS.iml
 P2-IDS/IDS.iml
 P3-AStar/AStar.iml
+P1-BFS/.idea
+P2-IDS/.idea
+P3-AStar/.idea
+
 
