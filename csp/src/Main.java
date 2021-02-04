@@ -8,7 +8,7 @@ class Cell implements Comparable<Cell> {
     private boolean assign;
     private final int row;
     private final int column;
-    private final int degree;
+    private int degree;
 
     public Cell(int number, String color, ArrayList<String> colorDomain, ArrayList<Integer> numberDomain, int row, int column, int n, boolean assign) {
         this.number = number;
@@ -25,9 +25,18 @@ class Cell implements Comparable<Cell> {
         else
             this.degree = ((2 * n) - 2) + 4;
     }
+    public void setDegree(){
+        this.degree--;
+
+    }
     public void setAssign(boolean assign) {
         this.assign = assign;
     }
+
+    public int getDegree() {
+        return degree;
+    }
+
     public boolean isAssign() {
         return assign;
     }
@@ -46,14 +55,18 @@ class Cell implements Comparable<Cell> {
 
     @Override
     public int compareTo(Cell o) {
+        if(o==this)
+            return 0;
         if (o.colorDomain.size() + o.numberDomain.size() > this.colorDomain.size() + this.numberDomain.size())
             return -1;
         else if (o.colorDomain.size() + o.numberDomain.size() < this.colorDomain.size() + this.numberDomain.size())
             return 1;
         else if (o.degree > this.degree)
             return 1;
-        else
+        else if(o.degree < this.degree)
             return -1;
+        else
+            return 0;
     }
 }
 
@@ -157,13 +170,14 @@ class CSP {
     private boolean checkStuff(Table newTable, int row, int col, int restore) {
         if (isSafeAssignment(newTable.getMainTable(), newTable.getMainTable()[row][col])) {
             if(forwardChecking(newTable.getMainTable(), newTable.getMainTable()[row][col], row, col)) {
+                newTable.getMainTable()[row][col].setAssign(true);
                 newTable.updateMRV();
                 cspList.push(newTable);
-            }
-            newTable.getMainTable()[row][col].setAssign(true);
-            if (goalChecking(newTable.getMainTable())) {
-                printTable(newTable.getMainTable());
-                return true;
+                if (goalChecking(newTable.getMainTable())) {
+                    printTable(newTable.getMainTable());
+                    return true;
+                }
+
             }
         } else {
             if (restore == 2) {
@@ -222,38 +236,50 @@ class CSP {
 
     private boolean forwardChecking(Cell[][] table, Cell cell, int i, int j) {
         for (int k = 0; k < n; k++) {
-            if (k != j) {
+            if (k != j && !table[i][k].isAssign()) {
                 table[i][k].removeNumberDomain(cell.getNumber());
                 if(table[i][k].getNumberDomain().size()==0)
                     return false;
+                if (table[i][j].getNumber()!=0)
+                    table[i][k].setDegree();
             }
         }
         for (int k = 0; k < n; k++) {
-            if (k != i) {
+            if (k != i && !table[k][j].isAssign()) {
                 table[k][j].removeNumberDomain(cell.getNumber());
                 if(table[k][j].getNumberDomain().size()==0)
                     return false;
+                if (table[i][j].getNumber()!=0)
+                    table[i][k].setDegree();
             }
         }
-        if (i != 0) {
+        if (i != 0 && !table[i - 1][j].isAssign()) {
             table[i - 1][j].removeColorDomain(cell.getColor());
             if(table[i - 1][j].getColorDomain().size()==0)
                 return false;
+            if (!table[i][j].getColor().equals(""))
+                table[i-1][j].setDegree();
         }
-        if (i != n - 1) {
+        if (i != n - 1 && !table[i + 1][j].isAssign()) {
             table[i + 1][j].removeColorDomain(cell.getColor());
             if(table[i + 1][j].getColorDomain().size()==0)
                 return false;
+            if (!table[i][j].getColor().equals(""))
+                table[i+1][j].setDegree();
         }
-        if (j != 0) {
+        if (j != 0 &&!table[i][j - 1].isAssign()) {
             table[i][j - 1].removeColorDomain(cell.getColor());
             if(table[i][j - 1].getColorDomain().size()==0)
                 return false;
+            if (!table[i][j].getColor().equals(""))
+                table[i][j-1].setDegree();
         }
-        if (j != n - 1) {
+        if (j != n - 1 && !table[i][j + 1].isAssign()) {
             table[i][j + 1].removeColorDomain(cell.getColor());
             if(table[i][j + 1].getColorDomain().size()==0)
                 return false;
+            if (!table[i][j].getColor().equals(""))
+                table[i][j+1].setDegree();
         }
         return true;
     }
