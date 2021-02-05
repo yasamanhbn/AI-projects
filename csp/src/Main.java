@@ -297,7 +297,7 @@ class CSP {
     }
 
     public void printTable(Cell[][] table) {
-        System.out.println("new table");
+        System.out.println("Goal");
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 System.out.print(table[i][j].getNumber() + table[i][j].getColor() + "\t");
