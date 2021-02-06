@@ -1,7 +1,6 @@
 import string
 import collections
 
-dictionary = set()
 # read file and store sentences
 def readData(pathName,listT):
     ferdowsiF = open(pathName,encoding="utf8")
@@ -27,9 +26,7 @@ def findFrequency(words_list):
     for i in words_list:
         if not i in freq_dic:
             if words_list.count(i) >= 2:
-                freq_dic.update({i:words_list.count(i)})
-                dictionary.add(i)
-                
+                freq_dic.update({i:words_list.count(i)})    
     return freq_dic
 
 
@@ -87,10 +84,10 @@ def findPoet(poem,ferdowsiUni,fedowsiBi,hafezUni,hafezBi,molaviUni,molaviBi):
     hafez = 1
     molavi = 1
     words = poem.split(" ")
-    l1 = 0.01
-    l2 = 0.25
-    l3 = 0.74
-    e = 0.00001
+    l1 = 0.05
+    l2 = 0.85
+    l3 = 0.1
+    e = 0.0001
     for i in range(len(words) - 1):
         pair = words[i] + "," + words[i + 1]
         ferdowsi *= backOffModel(pair,fedowsiBi,ferdowsiUni,l3,l2,l1,e)
@@ -138,7 +135,6 @@ if __name__ == "__main__":
     molavi_uni_model = buildUnigram(uniDicMolavi)
     molavi_bigram_model = buildBigram(biDicMolavi,uniDicMolavi)
 
-    print(len(dictionary))
     poems = open("./AI_P3/test_set/test_file.txt",encoding="utf8")
     count  = 0 
     total = 0
